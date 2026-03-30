@@ -68,7 +68,7 @@ def compute_anchors(H_b_layer, K, device="cuda:0"):
                 new_anchors[k] = H_b_layer[mask].mean(dim=0)
             else:
                 # Reinitialize empty clusters
-                new_anchors[k] = H_b_layer[torch.randint(0, N_b, (1,))].squeeze(0)
+                new_anchors[k] = H_b_layer[torch.randint(0, N_b, (1,), device=device)].squeeze(0)
 
         # Check convergence
         shift = (new_anchors - anchors).norm(dim=1).max().item()
@@ -236,9 +236,10 @@ def compute_local_steering_direction(H_m_layer, P_k, refusal_vector,
 
     delta_k = torch.linalg.pinv(A) @ b  # [d, d]
 
-    # Diagnostic: reconstruction error
+    # Diagnostic: per-sample reconstruction error
     result = X @ delta_k
-    avg_error = torch.norm(result - refusal_vector) / H_m_layer.shape[0]
+    per_sample_error = torch.norm(result - refusal_vector, dim=1)
+    avg_error = per_sample_error.mean()
     logger.info(f"Local steering: avg_reconstruction_error={avg_error:.6f}, "
                 f"refusal_norm={torch.norm(refusal_vector):.6f}")
 

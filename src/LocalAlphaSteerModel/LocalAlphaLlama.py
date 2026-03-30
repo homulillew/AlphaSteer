@@ -76,7 +76,8 @@ class LocalAlphaLlamaDecoderLayer(LlamaDecoderLayer):
         device = h.device
 
         # Compute soft gating weights: [B, K]
-        sq_dists = torch.cdist(h, self.anchors, p=2) ** 2  # [B, K]
+        # Compute squared distances directly (avoids sqrt in cdist)
+        sq_dists = (h.unsqueeze(1) - self.anchors.unsqueeze(0)).pow(2).sum(-1)  # [B, K]
         logits = -sq_dists / self.tau
         weights = F.softmax(logits, dim=-1)  # [B, K]
 
@@ -133,7 +134,8 @@ class LocalAlphaLlamaDecoderLayer(LlamaDecoderLayer):
             # Compute locally-gated steering vector
             steering_vector = self._compute_local_steering(last_hidden)  # [B, D]
 
-            # Apply steering
+            # Reshape to match hidden_states dimensions and apply steering
+            # (broadcast to all positions, consistent with AlphaSteer)
             hidden_states = hidden_states + steering_vector.unsqueeze(1)
 
         # Standard decoder layer forward pass
