@@ -215,15 +215,17 @@ def compute_local_steering_matrices(
 
     for k in range(K):
         P_k = projectors[k].to(device)
-        w_k = weights[:, k]  # [N_h]
+        w_k = weights[:, k].clamp(min=1e-8)  # [N_h]
 
-        # Weight harmful activations by proximity to cluster k
-        W_k = torch.diag(w_k.clamp(min=1e-8))  # [N_h, N_h]
         X = H_h_layer @ P_k  # [N_h, d]
 
+        # Use element-wise weighting to avoid materializing [N_h, N_h] diagonal
+        X_w = X * w_k.unsqueeze(1)  # [N_h, d] weighted by cluster proximity
+
         # Regularized weighted least-squares
-        A = X.T @ W_k @ X + lambda_reg * (P_k.T @ P_k)  # [d, d]
-        b = X.T @ (W_k @ refusal_vector.unsqueeze(0).expand(H_h_layer.shape[0], -1))  # [d, d]
+        A = X_w.T @ X + lambda_reg * (P_k.T @ P_k)  # [d, d]
+        rv_expanded = refusal_vector.unsqueeze(0).expand(H_h_layer.shape[0], -1)  # [N_h, d]
+        b = X_w.T @ rv_expanded  # [d, d]
 
         tilde_delta_k = torch.linalg.pinv(A) @ b
         tilde_deltas.append(tilde_delta_k)
