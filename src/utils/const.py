@@ -2,6 +2,7 @@ from transformers import LlamaConfig, Qwen2Config, Gemma2Config
 from transformers import LlamaForCausalLM, Qwen2ForCausalLM, Gemma2ForCausalLM
 from AlphaSteerModel import *
 from NaiveSteerModel import *
+from LocalAlphaSteerModel import *
 
 import sys
 import os
@@ -10,6 +11,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 __all__ = [
     "MODELS_DICT", "AlphaSteer_MODELS_DICT", "Steer_MODELS_DICT",
+    "LocalAlphaSteer_MODELS_DICT",
     "AlphaSteer_STEERING_LAYERS", "AlphaSteer_CALCULATION_CONFIG",
 ]
 
@@ -41,4 +43,8 @@ AlphaSteer_CALCULATION_CONFIG = {
     "llama3.1":[(8, 0.6), (9, 0.6), (10, 0.6), (11, 0.6), (12, 0.4), (13, 0.5), (14, 0.6), (16, 0.6), (18, 0.6), (19, 0.6)],
     "qwen2.5": [(5, 0.6), (6, 0.6), (7, 0.6), (8, 0.6), (9, 0.5), (10, 0.6), (11, 0.5), (12, 0.5), (13, 0.5), (14, 0.3), (15, 0.3), (16, 0.5), (18, 0.5), (19, 0.6)], 
     "gemma2": [(6, 0.5), (8, 0.4), (10, 0.6), (11, 0.6), (12, 0.6), (13, 0.6), (14, 0.6), (15, 0.6), (16, 0.6), (18, 0.6), (22, 0.5)],
+}
+
+LocalAlphaSteer_MODELS_DICT = {
+    "llama3.1": (LocalAlphaLlamaForCausalLM, LlamaConfig, "meta-llama/Llama-3.1-8B-Instruct"),
 }
